@@ -1,0 +1,25 @@
+# SLOs used by the end-to-end test against a real VictoriaMetrics.
+slos:
+  - name: checkout-availability
+    service: checkout
+    objective: 99.9
+    window: 30d
+    sli:
+      errors: sum(rate(http_requests_total{job="checkout",code=~"5.."}[${window}]))
+      total: sum(rate(http_requests_total{job="checkout"}[${window}]))
+
+  - name: search-availability
+    service: search
+    objective: 99.9
+    window: 30d
+    sli:
+      errors: sum(rate(http_requests_total{job="search",code=~"5.."}[${window}]))
+      total: sum(rate(http_requests_total{job="search"}[${window}]))
+
+  - name: billing-availability
+    service: billing
+    objective: 99.9
+    window: 30d
+    sli:
+      errors: sum(rate(http_requests_total{job="billing",code=~"5.."}[${window}]))
+      total: sum(rate(http_requests_total{job="billing"}[${window}]))
