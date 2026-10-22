@@ -1,6 +1,7 @@
 # slo-report
 
 [![ci](https://github.com/OTA-EITA/slo-report/actions/workflows/ci.yml/badge.svg)](https://github.com/OTA-EITA/slo-report/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/OTA-EITA/slo-report/badge)](https://securityscorecards.dev/viewer/?uri=github.com/OTA-EITA/slo-report)
 
 SLO を YAML で定義すると、次の 2 つを行う CLI です。
 
