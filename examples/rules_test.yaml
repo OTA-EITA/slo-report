@@ -1,0 +1,73 @@
+# promtool unit tests for examples/rules.yaml:
+#   promtool test rules examples/rules_test.yaml
+rule_files:
+  - rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # Outage: 10% of requests fail. The fast page alert (1h/5m) must fire within
+  # minutes, the slower page alert (6h/30m) after its 15m "for", and ticket
+  # alerts not yet.
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="api",code="200"}'
+        values: '0+90x240'
+      - series: 'http_requests_total{job="api",code="500"}'
+        values: '0+10x240'
+    promql_expr_test:
+      - expr: round(slo:error_ratio:rate5m{slo="api-availability"}, 0.0001)
+        eval_time: 30m
+        exp_samples:
+          - labels: '{service="api",slo="api-availability"}'
+            value: 0.1
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: SLOErrorBudgetBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              long_window: 1h
+              short_window: 5m
+              service: api
+              slo: api-availability
+            exp_annotations:
+              summary: api-availability is burning its error budget 14.4x too fast
+              description: Error ratio of api-availability is above 0.0144 over both 1h and 5m. At this rate 2% of the 30d error budget is spent within 1h.
+              runbook_url: https://example.com/runbooks/api-availability
+      - eval_time: 20m
+        alertname: SLOErrorBudgetBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              long_window: 1h
+              short_window: 5m
+              service: api
+              slo: api-availability
+            exp_annotations:
+              summary: api-availability is burning its error budget 14.4x too fast
+              description: Error ratio of api-availability is above 0.0144 over both 1h and 5m. At this rate 2% of the 30d error budget is spent within 1h.
+              runbook_url: https://example.com/runbooks/api-availability
+          - exp_labels:
+              severity: page
+              long_window: 6h
+              short_window: 30m
+              service: api
+              slo: api-availability
+            exp_annotations:
+              summary: api-availability is burning its error budget 6x too fast
+              description: Error ratio of api-availability is above 0.006 over both 6h and 30m. At this rate 5% of the 30d error budget is spent within 6h.
+              runbook_url: https://example.com/runbooks/api-availability
+
+  # Healthy: 0.05% of requests fail, which is within the 99.9% objective.
+  # No alert may fire at any severity.
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{job="api",code="200"}'
+        values: '0+1999x240'
+      - series: 'http_requests_total{job="api",code="500"}'
+        values: '0+1x240'
+    alert_rule_test:
+      - eval_time: 4h
+        alertname: SLOErrorBudgetBurn
+        exp_alerts: []
