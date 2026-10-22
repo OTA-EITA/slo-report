@@ -1,0 +1,25 @@
+# Example SLOs for a web API. Queries must contain ${window}.
+slos:
+  - name: api-availability
+    service: api
+    description: Share of API requests that do not fail with a 5xx response
+    objective: 99.9
+    window: 30d
+    runbookURL: https://example.com/runbooks/api-availability
+    sli:
+      errors: sum(rate(http_requests_total{job="api",code=~"5.."}[${window}]))
+      total: sum(rate(http_requests_total{job="api"}[${window}]))
+
+  - name: api-latency
+    service: api
+    description: Share of API requests served within 300ms
+    objective: 99
+    window: 30d
+    labels:
+      team: platform
+    sli:
+      errors: |
+        sum(rate(http_request_duration_seconds_count{job="api"}[${window}]))
+        -
+        sum(rate(http_request_duration_seconds_bucket{job="api",le="0.3"}[${window}]))
+      total: sum(rate(http_request_duration_seconds_count{job="api"}[${window}]))
